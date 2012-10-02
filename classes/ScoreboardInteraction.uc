@@ -12,6 +12,23 @@ event NotifyLevelChange() {
     Master.RemoveInteraction(self);
 }
 
+function bool KeyEvent(EInputKey Key, EInputAction Action, float Delta ) {
+    local string alias;
+
+    alias= ViewportOwner.Actor.ConsoleCommand("KEYBINDING"@ViewportOwner.Actor.ConsoleCommand("KEYNAME"@Key));
+    if (Action == IST_Press || Action == IST_Hold) {
+        if (alias == class'HSBKeyBinding'.default.KeyData[1].Alias) {
+            bVisible= true;
+        }
+    } else if (Action == IST_Release) {
+        if (alias == class'HSBKeyBinding'.default.KeyData[1].Alias) {
+            bVisible= false;
+        }
+    }
+ 
+    return false;
+}
+
 function String FormatTime( int Seconds )
 {
     local int Minutes, Hours;
@@ -482,7 +499,6 @@ function DrawNetInfo(Canvas Canvas,int FontReduction,int HeaderOffsetY,int Playe
 }
 
 defaultproperties {
-    bVisible= true
     bActive= true
 
     BoxMaterial=Material'InterfaceArt_tex.Menu.DownTickBlurry'
