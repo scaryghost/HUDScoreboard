@@ -14,7 +14,7 @@ simulated function Tick(float DeltaTime) {
 
     PC= Level.GetLocalPlayerController();
     if (PC != none) {
-        PC.Player.InteractionMaster.AddInteraction("HUDScoreboard.HSBInteraction", PC.Player);
+        PC.Player.InteractionMaster.AddInteraction("HUDScoreboard.ScoreboardInteraction", PC.Player);
     }
     Disable('Tick');
 }
