@@ -1,4 +1,4 @@
-class ScoreboardOne extends ScoreboardInteractionBase;
+class ScoreboardTwo extends ScoreboardInteractionBase;
 
 function PostRender(Canvas canvas) {
     local PlayerReplicationInfo PRI, OwnerPRI;
@@ -62,20 +62,6 @@ function PostRender(Canvas canvas) {
     }
 
     PlayerBoxSizeY = FClamp((1.25 + (Canvas.ClipY - 0.67 * MessageFoot)) / PlayerCount - BoxSpaceY, PlayerBoxSizeY, MaxScaling * YL);
-
-//    bDisplayMessages = (PlayerCount <= (Canvas.ClipY - MessageFoot) / (PlayerBoxSizeY + BoxSpaceY));
-
-    HeaderOffsetY = 10 * YL;
-    BoxWidth = 0.7 * Canvas.ClipX;
-    BoxXPos = 0.5 * (Canvas.ClipX - BoxWidth);
-    BoxWidth = Canvas.ClipX - 2 * BoxXPos;
-    VetXPos = BoxXPos + 0.0001 * BoxWidth;
-    NameXPos = BoxXPos + 0.08 * BoxWidth;
-    KillsXPos = BoxXPos + 0.60 * BoxWidth;
-    HealthXpos = BoxXPos + 0.75 * BoxWidth;
-    NetXPos = BoxXPos + 0.90 * BoxWidth;
-    ScoreXPos= BoxXPos + 0.5 * BoxWidth;
-    DeathsXPos = BoxXPos + 0.375 * BoxWidth;
 
     // draw background boxes
     Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Alpha;
@@ -167,7 +153,6 @@ function PostRender(Canvas canvas) {
     Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Normal;
     MaxScaling = FMax(PlayerBoxSizeY,30.f);
 
-    // Draw the player informations.
     for ( i = 0; i < PlayerCount; i++ ) {
         Canvas.DrawColor = HUDClass.default.WhiteColor;
 
@@ -190,11 +175,15 @@ function PostRender(Canvas canvas) {
 
         // draw cash
         Canvas.SetPos(ScoreXPos, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-        Canvas.DrawText("£"$int(pawnArray[i].PlayerReplicationInfo.Score),true);
+        Canvas.DrawText(pawnArray[i].Weapon.AmmoAmount(0)$"/"$pawnArray[i].Weapon.MaxAmmo(0),true);
 
         // draw deaths
-        Canvas.SetPos(DeathsXPos, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-        Canvas.DrawText(int(pawnArray[i].PlayerReplicationInfo.Deaths),true);
+        Canvas.SetPos(DeathsXPos  - 0.5*DeathsXL, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
+        if (class<KFWeaponPickup>(pawnArray[i].Weapon.PickupClass) != none) {
+            Canvas.DrawText(class<KFWeaponPickup>(pawnArray[i].Weapon.PickupClass).default.ItemShortName,true);
+        } else {
+            Canvas.DrawText(pawnArray[i].Weapon.PickupClass.default.InventoryType.default.ItemName, true);
+        }
 
         // draw healths
         Canvas.SetPos(HealthXpos - 0.5 * HealthWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
@@ -227,14 +216,17 @@ function PostRender(Canvas canvas) {
     Canvas.SetPos(NetXPos - 0.5 * NetXL, TitleYPos);
     Canvas.DrawText(NetText,true);
 
-    for ( i=0; i < pawnArray.Length; i++ ) {
-        PRIArray[i]= pawnArray[i].PlayerReplicationInfo;
+    for ( i=0;i < pawnArray.Length; i++ ) {
+        PRIArray[i] = pawnArray[i].PlayerReplicationInfo;
     }
 
     DrawNetInfo(Canvas, FontReduction, HeaderOffsetY, PlayerBoxSizeY, BoxSpaceY, BoxTextOffsetY, OwnerOffset, PlayerCount, NetXPos);
     DrawMatchID(Canvas, FontReduction);
+
 }
 
 defaultproperties {
-    keyDataIndex= 1
+    keyDataIndex= 2
+    DeathsText= "Weapon"
+    PointsText= "Ammo"
 }

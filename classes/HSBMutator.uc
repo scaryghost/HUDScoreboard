@@ -15,6 +15,7 @@ simulated function Tick(float DeltaTime) {
     PC= Level.GetLocalPlayerController();
     if (PC != none) {
         PC.Player.InteractionMaster.AddInteraction("HUDScoreboard.ScoreboardOne", PC.Player);
+        PC.Player.InteractionMaster.AddInteraction("HUDScoreboard.ScoreboardTwo", PC.Player);
     }
     Disable('Tick');
 }
