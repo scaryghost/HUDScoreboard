@@ -63,6 +63,18 @@ function PostRender(Canvas canvas) {
 
     PlayerBoxSizeY = FClamp((1.25 + (Canvas.ClipY - 0.67 * MessageFoot)) / PlayerCount - BoxSpaceY, PlayerBoxSizeY, MaxScaling * YL);
 
+    HeaderOffsetY = 10 * YL;
+    BoxWidth = 0.7 * Canvas.ClipX;
+    BoxXPos = 0.5 * (Canvas.ClipX - BoxWidth);
+    BoxWidth = Canvas.ClipX - 2 * BoxXPos;
+    VetXPos = BoxXPos + 0.0001 * BoxWidth;
+    NameXPos = BoxXPos + 0.08 * BoxWidth;
+    KillsXPos = BoxXPos + 0.60 * BoxWidth;
+    HealthXpos = BoxXPos + 0.75 * BoxWidth;
+    NetXPos = BoxXPos + 0.90 * BoxWidth;
+    ScoreXPos= BoxXPos + 0.5 * BoxWidth;
+    DeathsXPos = BoxXPos + 0.375 * BoxWidth;
+
     // draw background boxes
     Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Alpha;
     Canvas.DrawColor = HUDClass.default.WhiteColor;
