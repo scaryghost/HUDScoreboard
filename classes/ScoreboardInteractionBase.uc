@@ -53,9 +53,9 @@ function PostRender(Canvas canvas) {
     local PlayerReplicationInfo PRI, OwnerPRI;
     local array<KFHumanPawn> pawnArray;
     local KFHumanPawn KFHP;
-    local int i, FontReduction, NetXPos, PlayerCount, HeaderOffsetY, HeadFoot, MessageFoot, PlayerBoxSizeY, BoxSpaceY, NameXPos, BoxTextOffsetY, OwnerOffset, HealthXPos, BoxXPos,KillsXPos, TitleYPos, BoxWidth, VetXPos;
+    local int i, FontReduction, NetXPos, PlayerCount, HeaderOffsetY, HeadFoot, MessageFoot, PlayerBoxSizeY, BoxSpaceY, NameXPos, BoxTextOffsetY, OwnerOffset, BoxXPos,KillsXPos, TitleYPos, BoxWidth, VetXPos;
     local float XL,YL, MaxScaling;
-    local float deathsXL, KillsXL, netXL,HealthXL, MaxNamePos;
+    local float netXL, MaxNamePos;
     local bool bNameFontReduction;
     local Material VeterancyBox;
 
@@ -116,6 +116,7 @@ function PostRender(Canvas canvas) {
     BoxWidth = Canvas.ClipX - 2 * BoxXPos;
     VetXPos = BoxXPos + 0.0001 * BoxWidth;
     NameXPos = BoxXPos + 0.08 * BoxWidth;
+    KillsXPos= BoxXPos + 0.60 * BoxWidth;
 
     // draw background boxes
     Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Alpha;
@@ -143,7 +144,6 @@ function PostRender(Canvas canvas) {
             break;
         }
     }
-
     if ( bNameFontReduction ) {
         Canvas.Font= GetSmallerFontFor(Canvas, FontReduction + 1);
     }
@@ -163,8 +163,7 @@ function PostRender(Canvas canvas) {
         if( i == OwnerOffset ) {
             Canvas.DrawColor.G = 0;
             Canvas.DrawColor.B = 0;
-        }
-        else {
+        } else {
             Canvas.DrawColor.G = 255;
             Canvas.DrawColor.B = 255;
         }
@@ -187,6 +186,8 @@ function PostRender(Canvas canvas) {
     if ( bNameFontReduction ) {
         Canvas.Font = GetSmallerFontFor(Canvas, FontReduction);
     }
+    Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Normal;
+    MaxScaling = FMax(PlayerBoxSizeY,30.f);
 
     /** Draw Custom stats */
     for (i = 0; i < PlayerCount; i++) {

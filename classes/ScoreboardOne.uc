@@ -13,6 +13,7 @@ function drawHeaders(Canvas canvas, float YL, int BoxXPos, int BoxWidth, int Tit
 }
 
 function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
+    canvas.DrawColor = HUDClass.default.WhiteColor;
     canvas.StrLen(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, KillWidthX, YL);
     canvas.SetPos(BoxXPos + 0.60 * BoxWidth - 0.5 * KillWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
     canvas.DrawText(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, true);
@@ -20,6 +21,7 @@ function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerB
     // draw cash
     canvas.SetPos(BoxXPos + 0.5 * BoxWidth, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
     canvas.DrawText("£"$int(KFHP.PlayerReplicationInfo.Score),true);
+
 
     // draw deaths
     Canvas.SetPos(BoxXPos + 0.375 * BoxWidth, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
