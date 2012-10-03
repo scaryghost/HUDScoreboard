@@ -7,9 +7,26 @@ var() class<HUD> HUDClass;
 var localized string OutText, HealthyString, InjuredString, CriticalString, MatchIDText, WaveString, OutFireText;
 var bool bDisplayWithKills;
 var PlayerReplicationInfo PRIArray[32];
-var float FPHTime;
+var float FPHTime, KillWidthX, HealthWidthX;
 var localized string        SkillLevel[8];
 var int keyDataIndex;
+
+function drawHeaders(Canvas canvas, float YL, int BoxXPos, int BoxWidth, int TitleYPos) {
+    local float KillsXL, HealthXL;
+    Canvas.StrLen(HealthText, HealthXL, YL);
+    Canvas.StrLen(KillsText, KillsXL, YL);
+    Canvas.StrLen("INJURED", HealthWidthX, YL);
+
+    Canvas.DrawColor= HUDClass.default.WhiteColor;
+    Canvas.SetPos(BoxXPos + 0.08 * BoxWidth, TitleYPos);
+    Canvas.DrawText(PlayerText,true);
+    Canvas.SetPos(BoxXPos + 0.60 * BoxWidth - 0.5 * KillsXL, TitleYPos);
+    Canvas.DrawText(KillsText,true);
+    Canvas.SetPos(BoxXPos + 0.75 * BoxWidth - 0.5 * HealthXL, TitleYPos);
+    Canvas.DrawText(HealthText,true);
+}
+
+function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth);
 
 event NotifyLevelChange() {
     Master.RemoveInteraction(self);
@@ -32,6 +49,165 @@ function bool KeyEvent(EInputKey Key, EInputAction Action, float Delta ) {
     return false;
 }
 
+function PostRender(Canvas canvas) {
+    local PlayerReplicationInfo PRI, OwnerPRI;
+    local array<KFHumanPawn> pawnArray;
+    local KFHumanPawn KFHP;
+    local int i, FontReduction, NetXPos, PlayerCount, HeaderOffsetY, HeadFoot, MessageFoot, PlayerBoxSizeY, BoxSpaceY, NameXPos, BoxTextOffsetY, OwnerOffset, HealthXPos, BoxXPos,KillsXPos, TitleYPos, BoxWidth, VetXPos;
+    local float XL,YL, MaxScaling;
+    local float deathsXL, KillsXL, netXL,HealthXL, MaxNamePos;
+    local bool bNameFontReduction;
+    local Material VeterancyBox;
+
+    OwnerPRI= ViewportOwner.Actor.PlayerReplicationInfo;
+    OwnerOffset= -1;
+
+    foreach ViewportOwner.Actor.DynamicActors(class'KFHumanPawn', KFHP) {
+        PRI= KFHP.PlayerReplicationInfo;
+
+        if (!PRI.bOnlySpectator) {
+            if (PRI == OwnerPRI) {
+                OwnerOffset = i;
+            }
+
+            PlayerCount++;
+            pawnArray[pawnArray.Length]= KFHP;
+        }
+    }
+
+    PlayerCount = Min(PlayerCount, 32);
+
+    // Select best font size and box size to fit as many players as possible on screen
+    Canvas.Font = class'ROHud'.static.GetSmallMenuFont(Canvas);
+    Canvas.StrLen("Test", XL, YL);
+    BoxSpaceY = 0.25 * YL;
+    PlayerBoxSizeY = 1.2 * YL;
+    HeadFoot = 7 * YL;
+    MessageFoot = 1.5 * HeadFoot;
+
+    if ( PlayerCount > (Canvas.ClipY - 1.5 * HeadFoot) / (PlayerBoxSizeY + BoxSpaceY) ) {
+        BoxSpaceY = 0.125 * YL;
+        PlayerBoxSizeY = 1.25 * YL;
+
+        if ( PlayerCount > (Canvas.ClipY - 1.5 * HeadFoot) / (PlayerBoxSizeY + BoxSpaceY) ) {
+            if ( PlayerCount > (Canvas.ClipY - 1.5 * HeadFoot) / (PlayerBoxSizeY + BoxSpaceY) ) {
+                PlayerBoxSizeY = 1.125 * YL;
+            }
+        }
+    }
+
+    if (Canvas.ClipX < 512) {
+        PlayerCount= Min(PlayerCount, 1+(Canvas.ClipY - HeadFoot) / (PlayerBoxSizeY + BoxSpaceY) );
+    } else {
+        PlayerCount= Min(PlayerCount, (Canvas.ClipY - HeadFoot) / (PlayerBoxSizeY + BoxSpaceY) );
+    }
+
+    if (FontReduction > 2) {
+        MaxScaling= 3;
+    } else {
+        MaxScaling= 2.125;
+    }
+
+    PlayerBoxSizeY= FClamp((1.25 + (Canvas.ClipY - 0.67 * MessageFoot)) / PlayerCount - BoxSpaceY, PlayerBoxSizeY, MaxScaling * YL);
+
+    HeaderOffsetY = 10 * YL;
+    BoxWidth = 0.7 * Canvas.ClipX;
+    BoxXPos = 0.5 * (Canvas.ClipX - BoxWidth);
+    BoxWidth = Canvas.ClipX - 2 * BoxXPos;
+    VetXPos = BoxXPos + 0.0001 * BoxWidth;
+    NameXPos = BoxXPos + 0.08 * BoxWidth;
+
+    // draw background boxes
+    Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Alpha;
+    Canvas.DrawColor = HUDClass.default.WhiteColor;
+    Canvas.DrawColor.A = 128;
+
+    for ( i = 0; i < PlayerCount; i++ ) {
+        Canvas.SetPos(BoxXPos, HeaderOffsetY + (PlayerBoxSizeY + BoxSpaceY) * i);
+        Canvas.DrawTileStretched( BoxMaterial, BoxWidth, PlayerBoxSizeY);
+    }
+
+    // draw title
+    Canvas.Style= ViewportOwner.Actor.ERenderStyle.STY_Normal;
+    DrawTitle(Canvas, HeaderOffsetY, (PlayerCount + 1) * (PlayerBoxSizeY + BoxSpaceY), PlayerBoxSizeY);
+    TitleYPos= HeaderOffsetY - 1.1 * YL;
+    drawHeaders(canvas, YL, BoxXPos, BoxWidth, TitleYPos);
+
+    // draw player names
+    MaxNamePos= 0.9 * (KillsXPos - NameXPos);
+    for (i= 0; i < PlayerCount; i++) {
+        Canvas.StrLen(pawnArray[i].PlayerReplicationInfo.PlayerName, XL, YL);
+
+        if ( XL > MaxNamePos ) {
+            bNameFontReduction= true;
+            break;
+        }
+    }
+
+    if ( bNameFontReduction ) {
+        Canvas.Font= GetSmallerFontFor(Canvas, FontReduction + 1);
+    }
+
+    Canvas.Style= ViewportOwner.Actor.ERenderStyle.STY_Normal;
+    Canvas.DrawColor= HUDClass.default.WhiteColor;
+    Canvas.SetPos(0.5 * Canvas.ClipX, HeaderOffsetY + 4);
+    BoxTextOffsetY= HeaderOffsetY + 0.5 * (PlayerBoxSizeY - YL);
+
+    Canvas.DrawColor= HUDClass.default.WhiteColor;
+    MaxNamePos= Canvas.ClipX;
+    Canvas.ClipX= KillsXPos - 4.f;
+
+    for ( i = 0; i < PlayerCount; i++ ) {
+        Canvas.SetPos(NameXPos, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
+
+        if( i == OwnerOffset ) {
+            Canvas.DrawColor.G = 0;
+            Canvas.DrawColor.B = 0;
+        }
+        else {
+            Canvas.DrawColor.G = 255;
+            Canvas.DrawColor.B = 255;
+        }
+
+        Canvas.DrawTextClipped(pawnArray[i].PlayerReplicationInfo.PlayerName);
+        
+        if ( KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo)!=None && KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo).ClientVeteranSkill != none ) {
+            VeterancyBox = KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo).ClientVeteranSkill.default.OnHUDIcon;
+
+            if ( VeterancyBox != None ) {
+                Canvas.SetPos(VetXPos, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY - PlayerBoxSizeY * 0.22);
+                Canvas.DrawTile(VeterancyBox, PlayerBoxSizeY, PlayerBoxSizeY, 0, 0, VeterancyBox.MaterialUSize(), VeterancyBox.MaterialVSize());
+            }
+        }
+    }
+
+    Canvas.ClipX = MaxNamePos;
+    Canvas.DrawColor = HUDClass.default.WhiteColor;
+
+    if ( bNameFontReduction ) {
+        Canvas.Font = GetSmallerFontFor(Canvas, FontReduction);
+    }
+
+    /** Draw Custom stats */
+    for (i = 0; i < PlayerCount; i++) {
+        drawStats(canvas, i, pawnArray[i], YL, PlayerBoxSizeY, BoxSpaceY, BoxTextOffsetY, BoxXPos, BoxWidth);
+    }
+
+    if ( ViewportOwner.Actor.GetEntryLevel().NetMode == NM_Standalone )
+        return;
+
+    Canvas.StrLen(NetText, NetXL, YL);
+    Canvas.DrawColor = HUDClass.default.WhiteColor;
+    Canvas.SetPos(NetXPos - 0.5 * NetXL, TitleYPos);
+    Canvas.DrawText(NetText,true);
+
+    for ( i=0;i < pawnArray.Length; i++ ) {
+        PRIArray[i] = pawnArray[i].PlayerReplicationInfo;
+    }
+
+    DrawNetInfo(Canvas, FontReduction, HeaderOffsetY, PlayerBoxSizeY, BoxSpaceY, BoxTextOffsetY, OwnerOffset, PlayerCount, NetXPos);
+    DrawMatchID(Canvas, FontReduction);
+}
 
 function String FormatTime(int Seconds) {
     local int Minutes, Hours;
