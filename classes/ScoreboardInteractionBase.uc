@@ -20,13 +20,40 @@ function drawHeaders(Canvas canvas, float YL, int BoxXPos, int BoxWidth, int Tit
     Canvas.DrawColor= HUDClass.default.WhiteColor;
     Canvas.SetPos(BoxXPos + 0.08 * BoxWidth, TitleYPos);
     Canvas.DrawText(PlayerText,true);
-    Canvas.SetPos(BoxXPos + 0.60 * BoxWidth - 0.5 * KillsXL, TitleYPos);
+    Canvas.SetPos(BoxXPos + 0.625 * BoxWidth - 0.5 * KillsXL, TitleYPos);
     Canvas.DrawText(KillsText,true);
     Canvas.SetPos(BoxXPos + 0.75 * BoxWidth - 0.5 * HealthXL, TitleYPos);
     Canvas.DrawText(HealthText,true);
 }
 
-function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth);
+function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
+    canvas.DrawColor = HUDClass.default.WhiteColor;
+    canvas.StrLen(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, KillWidthX, YL);
+    canvas.SetPos(BoxXPos + 0.625 * BoxWidth - 0.5 * KillWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
+    canvas.DrawText(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, true);
+
+    // draw healths
+    Canvas.SetPos(BoxXPos + 0.75 * BoxWidth - 0.5 * HealthWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
+    if ( KFHP.PlayerReplicationInfo.bOutOfLives ) {
+        Canvas.DrawColor = HUDClass.default.RedColor;
+        Canvas.DrawText(OutText,true);
+    } else {
+        if( KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).PlayerHealth>=95 ) {
+            Canvas.DrawColor= HUDClass.default.GreenColor;
+            Canvas.DrawText(HealthyString,true);
+        }
+        else if( KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).PlayerHealth>=50 ) {
+            Canvas.DrawColor= HUDClass.default.GoldColor;
+            Canvas.DrawText(InjuredString,true);
+        }
+        else {
+            Canvas.DrawColor= HUDClass.default.RedColor;
+            Canvas.DrawText(CriticalString,true);
+        }
+    }
+
+
+}
 
 event NotifyLevelChange() {
     Master.RemoveInteraction(self);
@@ -50,28 +77,26 @@ function bool KeyEvent(EInputKey Key, EInputAction Action, float Delta ) {
 }
 
 function PostRender(Canvas canvas) {
-    local PlayerReplicationInfo PRI, OwnerPRI;
     local array<KFHumanPawn> pawnArray;
-    local KFHumanPawn KFHP;
+    local KFHumanPawn KFHP, OwnerPawn;
     local int i, FontReduction, NetXPos, PlayerCount, HeaderOffsetY, HeadFoot, MessageFoot, PlayerBoxSizeY, BoxSpaceY, NameXPos, BoxTextOffsetY, OwnerOffset, BoxXPos,KillsXPos, TitleYPos, BoxWidth, VetXPos;
     local float XL,YL, MaxScaling;
     local float netXL, MaxNamePos;
     local bool bNameFontReduction;
     local Material VeterancyBox;
 
-    OwnerPRI= ViewportOwner.Actor.PlayerReplicationInfo;
+    OwnerPawn= KFHumanPawn(ViewportOwner.Actor.Pawn);
     OwnerOffset= -1;
 
     foreach ViewportOwner.Actor.DynamicActors(class'KFHumanPawn', KFHP) {
-        PRI= KFHP.PlayerReplicationInfo;
-
-        if (!PRI.bOnlySpectator) {
-            if (PRI == OwnerPRI) {
+        if (!KFHP.PlayerReplicationInfo.bOnlySpectator) {
+            if (KFHP == OwnerPawn) {
                 OwnerOffset = i;
             }
 
             PlayerCount++;
             pawnArray[pawnArray.Length]= KFHP;
+            i++;
         }
     }
 
@@ -117,6 +142,7 @@ function PostRender(Canvas canvas) {
     VetXPos = BoxXPos + 0.0001 * BoxWidth;
     NameXPos = BoxXPos + 0.08 * BoxWidth;
     KillsXPos= BoxXPos + 0.60 * BoxWidth;
+    NetXPos= BoxXPos + 0.90 * BoxWidth;
 
     // draw background boxes
     Canvas.Style = ViewportOwner.Actor.ERenderStyle.STY_Alpha;
@@ -194,7 +220,7 @@ function PostRender(Canvas canvas) {
         drawStats(canvas, i, pawnArray[i], YL, PlayerBoxSizeY, BoxSpaceY, BoxTextOffsetY, BoxXPos, BoxWidth);
     }
 
-    if ( ViewportOwner.Actor.GetEntryLevel().NetMode == NM_Standalone )
+    if ( ViewportOwner.Actor.Level.NetMode == NM_Standalone )
         return;
 
     Canvas.StrLen(NetText, NetXL, YL);
@@ -240,7 +266,7 @@ function DrawTitle(Canvas Canvas, float HeaderOffsetY, float PlayerAreaY, float 
     local string TitleString, ScoreInfoString, RestartString;
     local float TitleXL, ScoreInfoXL, YL, TitleY, TitleYL;
 
-    TitleString = SkillLevel[Clamp(InvasionGameReplicationInfo(ViewportOwner.Actor.GameReplicationInfo).BaseDifficulty, 0, 7)] @ "|" @ WaveString @ (InvasionGameReplicationInfo(ViewportOwner.Actor.GameReplicationInfo).WaveNumber + 1) @ "|" @ ViewportOwner.Actor.GetEntryLevel().Title;
+    TitleString = SkillLevel[Clamp(InvasionGameReplicationInfo(ViewportOwner.Actor.GameReplicationInfo).BaseDifficulty, 0, 7)] @ "|" @ WaveString @ (InvasionGameReplicationInfo(ViewportOwner.Actor.GameReplicationInfo).WaveNumber + 1) @ "|" @ ViewportOwner.Actor.Level.Title;
 
     Canvas.Font = class'ROHud'.static.GetSmallMenuFont(Canvas);
 
