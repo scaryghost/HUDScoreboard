@@ -26,23 +26,23 @@ function drawHeaders(Canvas canvas, float YL, int BoxXPos, int BoxWidth, int Tit
     Canvas.DrawText(HealthText,true);
 }
 
-function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
+function drawStats(Canvas canvas, int i, PlayerReplicationInfo KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
     canvas.DrawColor = HUDClass.default.WhiteColor;
-    canvas.StrLen(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, KillWidthX, YL);
+    canvas.StrLen(KFHP.Kills, KillWidthX, YL);
     canvas.SetPos(BoxXPos + 0.625 * BoxWidth - 0.5 * KillWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
-    canvas.DrawText(KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).Kills, true);
+    canvas.DrawText(KFHP.Kills, true);
 
     // draw healths
     Canvas.SetPos(BoxXPos + 0.75 * BoxWidth - 0.5 * HealthWidthX, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY);
-    if ( KFHP.PlayerReplicationInfo.bOutOfLives ) {
+    if ( KFHP.bOutOfLives ) {
         Canvas.DrawColor = HUDClass.default.RedColor;
         Canvas.DrawText(OutText,true);
     } else {
-        if( KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).PlayerHealth>=95 ) {
+        if( KFPlayerReplicationInfo(KFHP).PlayerHealth>=95 ) {
             Canvas.DrawColor= HUDClass.default.GreenColor;
             Canvas.DrawText(HealthyString,true);
         }
-        else if( KFPlayerReplicationInfo(KFHP.PlayerReplicationInfo).PlayerHealth>=50 ) {
+        else if( KFPlayerReplicationInfo(KFHP).PlayerHealth>=50 ) {
             Canvas.DrawColor= HUDClass.default.GoldColor;
             Canvas.DrawText(InjuredString,true);
         }
@@ -77,20 +77,20 @@ function bool KeyEvent(EInputKey Key, EInputAction Action, float Delta ) {
 }
 
 function PostRender(Canvas canvas) {
-    local array<KFHumanPawn> pawnArray;
-    local KFHumanPawn KFHP, OwnerPawn;
+    local array<PlayerReplicationInfo> pawnArray;
+    local PlayerReplicationInfo KFHP, OwnerPawn;
     local int i, FontReduction, NetXPos, PlayerCount, HeaderOffsetY, HeadFoot, MessageFoot, PlayerBoxSizeY, BoxSpaceY, NameXPos, BoxTextOffsetY, OwnerOffset, BoxXPos,KillsXPos, TitleYPos, BoxWidth, VetXPos;
     local float XL,YL, MaxScaling;
     local float netXL, MaxNamePos;
     local bool bNameFontReduction;
     local Material VeterancyBox;
 
-    OwnerPawn= KFHumanPawn(ViewportOwner.Actor.Pawn);
+    OwnerPawn= ViewportOwner.Actor.PlayerReplicationInfo;
     OwnerOffset= -1;
 
-    foreach ViewportOwner.Actor.DynamicActors(class'KFHumanPawn', KFHP) {
-        if (!KFHP.PlayerReplicationInfo.bOnlySpectator) {
-            if (KFHP == OwnerPawn) {
+    foreach ViewportOwner.Actor.DynamicActors(class'PlayerReplicationInfo', KFHP) {
+        if (!KFHP.bOnlySpectator) {
+            if (KFHP.Owner == OwnerPawn) {
                 OwnerOffset = i;
             }
 
@@ -163,7 +163,7 @@ function PostRender(Canvas canvas) {
     // draw player names
     MaxNamePos= 0.9 * (KillsXPos - NameXPos);
     for (i= 0; i < PlayerCount; i++) {
-        Canvas.StrLen(pawnArray[i].PlayerReplicationInfo.PlayerName, XL, YL);
+        Canvas.StrLen(pawnArray[i].PlayerName, XL, YL);
 
         if ( XL > MaxNamePos ) {
             bNameFontReduction= true;
@@ -194,10 +194,10 @@ function PostRender(Canvas canvas) {
             Canvas.DrawColor.B = 255;
         }
 
-        Canvas.DrawTextClipped(pawnArray[i].PlayerReplicationInfo.PlayerName);
+        Canvas.DrawTextClipped(pawnArray[i].PlayerName);
         
-        if ( KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo)!=None && KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo).ClientVeteranSkill != none ) {
-            VeterancyBox = KFPlayerReplicationInfo(pawnArray[i].PlayerReplicationInfo).ClientVeteranSkill.default.OnHUDIcon;
+        if ( KFPlayerReplicationInfo(pawnArray[i])!=None && KFPlayerReplicationInfo(pawnArray[i]).ClientVeteranSkill != none ) {
+            VeterancyBox = KFPlayerReplicationInfo(pawnArray[i]).ClientVeteranSkill.default.OnHUDIcon;
 
             if ( VeterancyBox != None ) {
                 Canvas.SetPos(VetXPos, (PlayerBoxSizeY + BoxSpaceY) * i + BoxTextOffsetY - PlayerBoxSizeY * 0.22);
@@ -229,7 +229,7 @@ function PostRender(Canvas canvas) {
     Canvas.DrawText(NetText,true);
 
     for ( i=0;i < pawnArray.Length; i++ ) {
-        PRIArray[i] = pawnArray[i].PlayerReplicationInfo;
+        PRIArray[i] = pawnArray[i];
     }
 
     DrawNetInfo(Canvas, FontReduction, HeaderOffsetY, PlayerBoxSizeY, BoxSpaceY, BoxTextOffsetY, OwnerOffset, PlayerCount, NetXPos);

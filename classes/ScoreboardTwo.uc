@@ -12,23 +12,26 @@ function drawHeaders(Canvas canvas, float YL, int BoxXPos, int BoxWidth, int Tit
     
 }
 
-function drawStats(Canvas canvas, int i, KFHumanPawn KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
+function drawStats(Canvas canvas, int i, PlayerReplicationInfo KFHP, float YL, int PlayerBoxSizeY, int BoxSpaceY, int BoxTextOffsetY, int BoxXPos, int BoxWidth) {
     local float DeathsXL;
+    local Weapon weapon;
+
+    weapon= Controller(KFHP.Owner).Pawn.Weapon;
 
     super.drawStats(canvas, i, KFHP, YL, PlayerBoxSizeY, BoxSpaceY, BoxTextOFfsetY, BoxXPos, BoxWidth);
     canvas.DrawColor = HUDClass.default.WhiteColor;
     canvas.SetPos(BoxXPos + 0.5 * BoxWidth, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-    canvas.DrawText(KFHP.Weapon.AmmoAmount(0)$"/"$KFHP.Weapon.MaxAmmo(0),true);
+    canvas.DrawText(weapon.AmmoAmount(0)$"/"$weapon.MaxAmmo(0),true);
 
     Canvas.StrLen(DeathsText, DeathsXL, YL);
     canvas.SetPos(BoxXPos + 0.375 * BoxWidth  - 0.5*DeathsXL, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-    if (class<KFWeaponPickup>(KFHP.Weapon.PickupClass) != none) {
-        if (class<KFWeaponPickup>(KFHP.Weapon.PickupClass).default.ItemShortName != "")
-            Canvas.DrawText(class<KFWeaponPickup>(KFHP.Weapon.PickupClass).default.ItemShortName,true);
+    if (class<KFWeaponPickup>(weapon.PickupClass) != none) {
+        if (class<KFWeaponPickup>(weapon.PickupClass).default.ItemShortName != "")
+            Canvas.DrawText(class<KFWeaponPickup>(weapon.PickupClass).default.ItemShortName,true);
         else
-            Canvas.DrawText(class<KFWeaponPickup>(KFHP.Weapon.PickupClass).default.ItemName,true);
+            Canvas.DrawText(class<KFWeaponPickup>(weapon.PickupClass).default.ItemName,true);
     } else {
-        Canvas.DrawText(KFHP.Weapon.PickupClass.default.InventoryType.default.ItemName, true);
+        Canvas.DrawText(weapon.PickupClass.default.InventoryType.default.ItemName, true);
     }
 }
 
